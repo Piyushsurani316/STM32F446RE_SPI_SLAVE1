@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include <string.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -43,7 +44,8 @@
 SPI_HandleTypeDef hspi1;
 
 /* USER CODE BEGIN PV */
-uint8_t rxData[1]  ;
+uint8_t  rxData[12]  ;
+uint8_t a=0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -96,25 +98,30 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
-  {
-    /* USER CODE END WHILE */
+  {a=1;
+      // Wait until master pulls NSS LOW (start of frame)
 
-	  if (HAL_SPI_Receive(&hspi1, rxData, 1, HAL_MAX_DELAY)==HAL_OK)
-	  {
-	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
-	  HAL_Delay(200);
-	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
-	  HAL_Delay(200);
-    /* USER CODE BEGIN 3 */
-	  }
+a=2;
+      // Now receive exactly 12 bytes
+      if (HAL_SPI_Receive(&hspi1, rxData, 12, HAL_MAX_DELAY) == HAL_OK)
+      {a=3;
+      rxData[11] = '\0';
+      // Wait until NSS goes HIGH again (end of frame)
+
+a=4;
+          // Compare raw bytes (better than strcmp)
+          if (memcmp(rxData, "Hello world", 11) == 0)
+          {
+              HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+              a=5;
+              HAL_Delay(50);
+              HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+              a=0;
+
+          }
+      }
   }
-  /* USER CODE END 3 */
 }
-
-/**
-  * @brief System Clock Configuration
-  * @retval None
-  */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
@@ -205,10 +212,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : PA8 */
-  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  /*Configure GPIO pin : PA9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_9;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
